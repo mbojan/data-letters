@@ -1,30 +1,30 @@
 roles,organizations,docs_avoided
-secretário de estado,Alfândega ,PASSAPORTE 
-governador,Câmara,PAUTA 
-ouvidor-geral,Ouvidoria,MINUTA 
-soldado,Fazenda Real,LISTA 
-capitão-mor,Relação da Bahia,DESPACHO 
+secretário de estado,Alfândega,PASSAPORTE
+governador,Câmara,PAUTA
+ouvidor-geral,Ouvidoria,MINUTA
+soldado,Fazenda Real,LISTA
+capitão-mor,Relação da Bahia,DESPACHO
 procurador,Conselho Ultramarino,RECIBO
 príncipe regente,Relação do Rio de Janeiro,CONTRATO
 juiz,Casa de Suplicação,TRASLADO
 tabelião,Mesa do Desembargo do Paço,BILHETE
 vice-rei,Conselho Ultramarino,TERMO DE JURAMENTO
-capitão-general,Regimento de Infantaria Auxiliar de Artilharia,PARECER 
-almoxarife,Casa da Moeda,CERTIDÃO 
-piloto,Público Judicial e Notas,DECRETO 
-medidor e demarcador,"Casa da Suplicação, Terço",PORTARIA
+capitão-general,Regimento de Infantaria Auxiliar de Artilharia,PARECER
+almoxarife,Casa da Moeda,CERTIDÃO
+piloto,Público Judicial e Notas,DECRETO
+medidor e demarcador,Casa da Suplicação,PORTARIA
 administrador,Fazenda Real,PATENTE
-segundo tenente,Companhia do Regimento de Infantaria,CARTA PATENTE 
+segundo tenente,Companhia do Regimento de Infantaria,CARTA PATENTE
 sargento-mor,Senado,MAPA
-caixa,Regimento Auxiliar,
+caixa,Regimento Auxiliar,RELAÇÃO
 mestre,senado da câmara,
 intendente,colégio da Companhia de Jesus,
-morador,"Crime da Corte,",
+morador,Crime da Corte,
 oficial,Companhia de Jesus,
 cavaleiro,Regimento de Artilharia,
 senhorio,Irmandade,
-oficial-mor,terço ,
-comandante,Cavalos da Ordenança ,
+oficial-mor,Terço,
+comandante,Cavalos da Ordenança,
 coronel,Cortes Gerais e Extraordinárias da Nação Portuguesa,
 presidente,Companhia de Jesus,
 desembargador,Ordem de Cristo Junta da Real Fazenda da Marinha,
