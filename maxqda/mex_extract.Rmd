@@ -1,0 +1,130 @@
+---
+title: "Extracting data from MEX files"
+author: "Michał Bojanowski"
+date: "`r Sys.Date()`"
+output:
+  github_document:
+    toc: true
+editor_options: 
+  chunk_output_type: console
+---
+
+
+```{r setup, cache=FALSE, include=FALSE}
+suppressPackageStartupMessages({
+  library(maxqdar)
+  library(dplyr)
+  library(tidyr)
+})
+
+knitr::opts_chunk$set(
+  cache=TRUE,
+  echo=TRUE
+)
+```
+
+
+
+# Read data
+
+Directories (unzipped files from Agata)
+
+```{r dirs}
+dirs <- c(
+  "Documents 100-300 (without Portuguese letters)",
+  "WSZYSTKIE"
+)
+```
+
+File name database
+
+```{r files}
+files <- 
+lapply(
+  dirs,
+  function(d) {
+    data_frame(
+      mex_dir=d, 
+      mex_file=list.files(d)
+      )
+  }
+) %>%
+  bind_rows() %>%
+  mutate(
+    mex_path = file.path(mex_dir, mex_file)
+  )
+```
+
+
+# Extract
+
+```{r extract-mex}
+train <-
+files %>%
+  mutate(
+    data = lapply(files$mex_path, extract_mex_codings)
+  ) %>%
+  unnest(data) 
+```
+
+And thus we have
+
+```{r}
+glimpse(train)
+```
+
+
+
+# Bad file names
+
+Catching MEX files that do not have proper file names
+
+```{r bad-file-names}
+bf <-
+train %>%
+  extract(
+    file_name,
+    into = c("bf_word", "bf_id"),
+    regex = "^([A-Za-z]+) \\(([0-9]+)\\)",
+    remove = FALSE
+  ) %>%
+  mutate(
+    bf_is = !is.na(bf_word) | is.na(file_name),
+    bf_id = as.numeric(bf_id)
+  )
+```
+
+Number of text fragments that do or do not have proper file name, per MEX file. "Bad" fragments cannot be (easily) matched with full text.
+
+```{r bf-table, R.options=list(knitr.kable.NA="-")}
+z <-
+bf %>%
+  mutate(
+    ok = ifelse(bf_is, "bad", "good")
+  )
+
+z %>%
+  count(mex_file, ok) %>%
+  spread(ok, n) %>%
+  knitr::kable()
+
+z %>%
+  count(ok) %>%
+  knitr::kable()
+```
+
+
+```{r eval=FALSE, include=FALSE}
+# checking 
+bf %>%
+  filter(mex_file == "12 - wszystko - Esther exchange.mex") %>%
+  pull(file_name)
+```
+
+
+
+# Save as CSV
+
+```{r write-csv, eval=FALSE}
+readr::write_csv(train, "training_data.csv")
+```
