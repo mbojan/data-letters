@@ -149,6 +149,6 @@ bf %>%
 
 # Save as CSV
 
-```{r write-csv, eval=FALSE}
+```{r write-csv}
 readr::write_csv(train, "training_data.csv")
 ```

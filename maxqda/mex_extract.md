@@ -1,7 +1,7 @@
 Extracting data from MEX files
 ================
 Michał Bojanowski
-2018-01-05
+2018-01-10
 
 -   [Read data](#read-data)
 -   [Extract](#extract)
@@ -109,7 +109,7 @@ glimpse(train)
 Bad file names
 ==============
 
-Catching MEX files that do not have proper file names
+Catching MEX files that do not have proper file names. These popped-up because some of the coders did not import the source files, but pasted their content directly into MAXQDA. In consequence, we lost the connection between file name and its content.
 
 ``` r
 bf <-
