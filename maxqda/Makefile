@@ -4,6 +4,7 @@ output= $(addprefix output/,$(notdir $(input:.txt=.rtf)))
 help:
 	@echo 'Targets:'
 	@echo ' * traindata - create training data files as UTF8-encoded RTFs. Run `make` twice'
+	@echo ' * unzip_mex - unZIP MAXWDA MEX files'
 
 
 
@@ -25,6 +26,9 @@ unzip_training: ../train_poi_data_abstract_only.zip
 
 # Extract from MEX files
 
+unzip_mex:
+	unzip maxqda_100-300.zip
+	unzip maxqda_300-end.zip
 
 
 
