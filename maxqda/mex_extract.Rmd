@@ -77,7 +77,7 @@ glimpse(train)
 
 # Bad file names
 
-Catching MEX files that do not have proper file names
+Catching MEX files that do not have proper file names. These popped-up because some of the coders did not import the source files, but pasted their content directly into MAXQDA. In consequence, we lost the connection between file name and its content.
 
 ```{r bad-file-names}
 bf <-
@@ -120,6 +120,30 @@ bf %>%
   filter(mex_file == "12 - wszystko - Esther exchange.mex") %>%
   pull(file_name)
 ```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
