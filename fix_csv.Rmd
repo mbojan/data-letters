@@ -10,6 +10,7 @@ editor_options:
 ```{r setup, include=FALSE, cache=FALSE}
 requireNamespace("jqr")
 requireNamespace("jsonlite")
+requireNamespace("XLConnect")
 library(tidyverse)
 
 knitr::opts_chunk$set(
@@ -50,13 +51,13 @@ readr::write_csv(d, "src.csv")
 
 Read the CSV back
 
-```{r}
+```{r reread-csv}
 d <- readr::read_csv("src.csv")
 ```
 
 Duplicates
 
-```{r}
+```{r duplicated-all}
 d %>%
   mutate_all(duplicated) %>%
   summarise_all(any)
@@ -81,7 +82,7 @@ d %>%
 
 Load the terms
 
-```{r}
+```{r read-terms}
 fn <- "~/Desktop/SOCIAL CATEGORIES - Portuguese Empire (4).xlsx"
 shnames <- readxl::excel_sheets(fn)
 terms <- lapply(
@@ -106,7 +107,7 @@ terms <- lapply(
   
 ```
 
-```{r}
+```{r show-terms}
 terms %>%
   filter(has_duplicate(term), !is.na(term)) %>%
   count(sheet, term) %>%
@@ -114,38 +115,47 @@ terms %>%
   knitr::kable()
 ```
 
+Duplicated terms:
 
-```{r}
+```{r duplicated-terms}
 terms %>%
   filter(!is.na(term), !duplicated(term)) %>%
   count(type)
 ```
 
-```{r}
+Add stem
+
+```{r terms-stem}
 uterms <- terms %>%
   filter(!is.na(term), !duplicated(term)) %>%
   mutate(
+    # lcterm = tolower(term),
     stem = SnowballC::wordStem(term, language="portuguese")
   )
 ```
 
-```{r}
+
+Get tokens from the documents
+
+
+```{r tokenize}
 td <- d %>%
   tidytext::unnest_tokens(word, text)
 ```
 
 
-```{r}
+Join document tokens with search terms
+
+
+```{r join-tokens-terms}
 r <- td %>%
   semi_join(uterms, by=c("word"="term"))
+```
 
-r %>%
-  group_by(doc_id) %>%
-  summarise(
-    words = paste(unique(word), collapse=", ")
-  )
+Join full text and other variables
 
-r %>%
+```{r join-full-text}
+out <- r %>%
   distinct(doc_id, word) %>%
   group_by(doc_id) %>%
   mutate(
@@ -153,7 +163,73 @@ r %>%
   ) %>%
   spread(word_id, word) %>%
   left_join(d, by="doc_id") %>%
-  select(doc_id, text, everything()) %>%
-  readr::write_excel_csv(path="search.csv")
+  select(doc_id, text, everything())
+```
+
+# Identify phrases to be ignored
+
+```{r ignore-phrases}
+igf <- c(
+  "nau da Índia", 
+  "guerra preta", 
+  "vindo da Índia", 
+  "para a Índia", 
+  "castelhano", 
+  "Francisco de Santa Bárbara Moura", 
+  "branco", 
+  "espanhol", 
+  "soldado", 
+  "João de Basto Moura", 
+  "Rio Negro"
+)
+```
+
+Look for ignored phrases in full text
+
+```{r massage-ignored}
+to_ignore <- parallel::mclapply(
+  igf,
+  function(p) grepl(p, out$text),
+  mc.cores=2
+) %>%
+  set_names(igf) %>%
+  as_tibble() %>%
+  mutate(
+    doc_id = out$doc_id
+  ) %>%
+  gather(igf, found, -doc_id) %>%
+  group_by(doc_id) %>%
+  summarise(
+    any_found = any(found)
+  )
+```
+
+Merge to the rest
+
+```{r join-ignored}
+out %>%
+  left_join(to_ignore, by="doc_id") %>%
+  filter(!any_found) -> out
+```
+
+
+# Save
+
+Save to Excel-compatible CSV
+
+```{r out-save-csv, eval=FALSE}
+readr::write_excel_csv(out, path="search.csv")
+```
+
+Save to XLS directly
+
+```{r save-xls}
+XLConnect::writeWorksheetToFile(
+  file = "search.xls",
+  out %>%
+    select(-any_found),
+  sheet = "przeszukanie",
+  clearSheets = TRUE
+)
 ```
 
