@@ -1,0 +1,159 @@
+---
+title: "Extract and search for terms"
+output: 
+  github_document:
+    toc: true
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE, cache=FALSE}
+requireNamespace("jqr")
+requireNamespace("jsonlite")
+library(tidyverse)
+
+knitr::opts_chunk$set(
+  echo = TRUE
+)
+```
+
+
+```{r functions, include=FALSE}
+has_duplicate <- function(x)   x %in% unique(x[duplicated(x)])
+```
+
+
+# Read and filter the JSON
+
+
+Read, filter and convert to tibble.
+
+```{r read-filter, eval=FALSE}
+d <- paste(readr::read_lines("network_data/network_poihnr_0_169221_pt_exist_af.json"), collapse="") %>%
+  jqr::jq("[.network_data[] | {doc_type, doc_id, date, text}]") %>%
+  fromJSON() %>%
+  tibble::as_tibble(z)
+```
+
+Save
+
+```{r save-csv, eval=FALSE}
+readr::write_csv(d, "src.csv")
+```
+
+
+
+
+
+
+# Check
+
+Read the CSV back
+
+```{r}
+d <- readr::read_csv("src.csv")
+```
+
+Duplicates
+
+```{r}
+d %>%
+  mutate_all(duplicated) %>%
+  summarise_all(any)
+```
+
+- No duplicates on `doc_id`
+- Duplicates on `text`?
+
+Duplicate rows on `text`:
+
+```{r duplicated-text}
+d %>%
+  filter(duplicated(text)) %>%
+  arrange(text) %>%
+  knitr::kable()
+```
+
+
+
+
+# Search
+
+Load the terms
+
+```{r}
+fn <- "~/Desktop/SOCIAL CATEGORIES - Portuguese Empire (4).xlsx"
+shnames <- readxl::excel_sheets(fn)
+terms <- lapply(
+  shnames,
+  function(s) readxl::read_excel(
+    fn, 
+    sheet = s,
+    col_names="term"
+  )
+) %>%
+  set_names(shnames) %>%
+  bind_rows(.id="sheet") %>%
+  mutate(
+    type = recode(
+      sheet,
+      "Population of color" = "race",
+      "SUBALTERN GROUPS" = "subaltern",
+      "WOMEN" = "women",
+      "WOMENS NAMES" = "names"
+    )
+  )
+  
+```
+
+```{r}
+terms %>%
+  filter(has_duplicate(term), !is.na(term)) %>%
+  count(sheet, term) %>%
+  spread(sheet, n) %>%
+  knitr::kable()
+```
+
+
+```{r}
+terms %>%
+  filter(!is.na(term), !duplicated(term)) %>%
+  count(type)
+```
+
+```{r}
+uterms <- terms %>%
+  filter(!is.na(term), !duplicated(term)) %>%
+  mutate(
+    stem = SnowballC::wordStem(term, language="portuguese")
+  )
+```
+
+```{r}
+td <- d %>%
+  tidytext::unnest_tokens(word, text)
+```
+
+
+```{r}
+r <- td %>%
+  semi_join(uterms, by=c("word"="term"))
+
+r %>%
+  group_by(doc_id) %>%
+  summarise(
+    words = paste(unique(word), collapse=", ")
+  )
+
+r %>%
+  distinct(doc_id, word) %>%
+  group_by(doc_id) %>%
+  mutate(
+    word_id = seq(1, length(word))
+  ) %>%
+  spread(word_id, word) %>%
+  left_join(d, by="doc_id") %>%
+  select(doc_id, text, everything()) %>%
+  readr::write_excel_csv(path="search.csv")
+```
+
