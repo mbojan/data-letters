@@ -17,7 +17,7 @@ library(tidyverse)
 
 # Parse annotated document ------------------------------------------------
 
-fname <- "train_poi_data_agata_files/370_3.txt"
+fname <- "train_poi_data_maxqda/370_3.txt"
 l <- readLines(fname)
 d <- enframe(l[-1], name = "id") %>%
   mutate(
@@ -78,23 +78,12 @@ if(FALSE) {
 
 
 
-# Check which annotations overlap 
+library(intervals)
 
-library(DescTools)
+ints <- d %>%
+  select(from, to) %>%
+  data.matrix() %>%
+  Intervals(closed=c(TRUE, TRUE), type="Z")
+interval_overlap(ints, ints)
 
-dx <- crossing(
-  id.x = d$id,
-  id.y = d$id
-) %>%
-  filter(id.x != id.y) %>%
-  left_join(d, by=c(id.x = "id")) %>%
-  left_join(d, by=c(id.y = "id")) %>%
-  mutate(
-    i.x = map2(from.x, to.x, ~ c(..1, ..2)),
-    i.y = map2(from.y, to.y, ~ c(..1, ..2)),
-    o = map2_lgl(i.x, i.y, ~ ..1 %overlaps% ..2)
-  ) 
-
-
-dx %>%
-  filter(o)
+substring(l[1], d$from, d$to)
